@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.quot.QuotItemMapper">
+	
+	<select id="findAllByQuot" parameterType="quot" resultType="quotItem">
+	<![CDATA[
+		SELECT
+			rfq_no,
+			quot_rev,
+			cus_cd,
+			quot_seq as item_seq,
+			rfq_seq as rfq_item_seq,
+			qty,
+			unit_prc,
+			amt
+		FROM tb_quotItem a with (nolock)
+		WHERE rfq_no = #{rfqNo}
+			AND quot_rev = #{quotRev}
+			AND cus_cd = #{cusCd}
+	]]>
+	</select>
+
+
+</mapper>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.rfq.RfqMapper">
+  <select id="findByRfqNo" parameterType="string" resultType="kr.co.inogard.enio.api.domain.rfq.Rfq">
+	<![CDATA[
+		SELECT a.rfq_no, 
+           a.ttl, 
+           a.quot_rev, 
+           a.pr_typecd, 
+           a.io_flag, 
+           a.tax_typecd, 
+           b.constr_fr_dt AS dlv_fr_ymd, 
+           b.constr_to_dt AS dlv_to_ymd, 
+           a.dlv_loc, 
+           a.dlv_req_dt AS dlv_req_ymd, 
+           a.spot_dscr_yn, 
+           a.spot_dscr_dt, 
+           a.spot_dscr_usrnm, 
+           a.spot_dscr_usrtel, 
+           a.spot_dscr_loc, 
+           a.dlv_cond_rmrk, 
+           a.pay_cond_rmrk, 
+           a.bid_plan_amt, 
+           a.bid_sub_typecd, 
+           a.bid_typecd, 
+           a.bid_insr_yn, 
+           a.bid_insr_rate, 
+           a.rfq_rmrk, 
+           a.chrg_usrcd, 
+           u.dept_cd AS chrg_deptcd, 
+           a.rfq_st, 
+           a.reg_dt,
+           a.selected_bidder_std,
+           a.bidder_rate,
+           a.bid_expire_dt,
+           a.rfqdoc_yn,
+           a.rfqdoc_expire_dt,
+           a.rfqdoc_rmrk,
+           a.techdoc_yn,
+           a.techdoc_expire_dt,
+           a.techdoc_rmrk, 
+           b.constr_period_inpt_kind,
+           b.constr_period_rmrk,
+           a.sub_org_cd 
+    FROM   tb_rfq a WITH (nolock) 
+           INNER JOIN tb_usercode u WITH(nolock) ON( a.chrg_usrcd = u.user_cd ) 
+           INNER JOIN tb_rfqitem b WITH(nolock) ON( a.rfq_no = b.rfq_no ) 
+           INNER JOIN (
+                                SELECT  i.rfq_no,
+                                        Min(i.rfq_seq) AS rfq_seq
+                                FROM   tb_rfqitem i WITH(nolock)
+                                GROUP  BY i.rfq_no
+                              ) c ON( b.rfq_no = c.rfq_no AND b.rfq_seq = c.rfq_seq )
+    WHERE  a.rfq_no = #{rfqNo}
+	]]>
+  </select>
+
+  <select id="findNewRfqNoAfterCreateFromPr" parameterType="hashmap" resultType="string">
+	<![CDATA[ 
+      	DECLARE @v_prNo CHAR(20), 
+          @v_chrgUsrcd CHAR(10), 
+          @v_bidPlanAmt MONEY, 
+          @v_orgCd CHAR(5), 
+          @v_newRfqNo CHAR(20); 
+      
+        SET @v_prNo= #{prNo}; 
+        
+        SELECT @v_orgCd = Max(a.org_cd), 
+               @v_chrgUsrcd = Max(a.gm_usrcd), 
+               @v_bidPlanAmt = Sum(b.qty * b.plan_unit_prc) 
+        FROM   tb_pr a 
+               INNER JOIN tb_pritem b 
+                       ON( a.pr_no = b.pr_no ) 
+        WHERE  a.pr_no = @v_prNo; 
+        
+        DECLARE @v_ttl VARCHAR(200); 
+        
+        CREATE TABLE #t1 ( 
+          rfq_no CHAR(20) 
+        ); 
+        
+        INSERT INTO #t1 (rfq_no)
+        EXEC dbo.Usp_pr_create_rfq 
+          @v_prNo, 
+          @v_chrgUsrcd, 
+          @v_chrgUsrcd, 
+          @v_orgCd, 
+          @v_bidPlanAmt; 
+        
+        SELECT @v_newRfqNo = rfq_no 
+        FROM   #t1; 
+    
+    	DECLARE @v_prTypecd CHAR(1);
+    	DECLARE @v_subOrgCd CHAR(7);
+    
+        SELECT @v_ttl = a.ttl 
+    	     , @v_prTypecd = a.pr_Typecd
+    		 , @v_subOrgCd = a.sub_org_cd
+        FROM   tb_rfq a 
+        WHERE  a.rfq_no = @v_newRfqNo; 
+        
+        DROP TABLE #t1; 
+    
+    	/*==========================================================
+    		공사(S), 용역(W)일때 tb_constrcode (서비스정보)  입력
+    	==========================================================*/
+    	DECLARE @v_constrcd char(20),
+    		  	@v_prefix char(15),
+    			@v_seq char(5),
+    			@v_curdt datetime;
+    
+    	IF @v_prTypecd <> 'N'
+    	BEGIN
+    		SET @v_curdt = CONVERT(CHAR(8), GETDATE(), 112);
+    		SET @v_prefix = @v_orgCd + '92' + CONVERT(CHAR(8), @v_curdt, 112);
+    		
+    		SELECT @v_seq = SUBSTRING(CONVERT(CHAR(6), ISNULL(MAX(CONVERT(INT, '1' + SUBSTRING(constr_cd,16,5))), 100000) + 1), 2, 5)
+    		  FROM tb_constrcode
+    		 WHERE SUBSTRING(constr_cd, 1, 15) = @v_prefix;
+    
+    		SET @v_constrcd = @v_prefix + @v_seq;
+    
+    		INSERT INTO tb_constrcode (
+    			constr_cd,      constr_nm,      constr_flag,    constr_loc,     constr_fr_dt,
+    			constr_to_dt,   constr_rmrk,    cls_cd,         reg_usrcd,      reg_dt,
+    			org_cd,         use_yn,         sub_org_cd,		constr_period_inpt_kind,		constr_period_rmrk
+    		) VALUES (
+    			@v_constrcd,    @v_ttl,			@v_prTypecd,    null,			null,
+    			null,			       null,			    null,			        null,			@v_curdt,
+    			@v_orgcd,       'N',			@v_subOrgCd,	#{constrPeriodInptKind},			#{constrPeriodRmrk}
+    		);
+    	END
+        
+        EXEC Usp_prfile_create_rfqfile 
+          @v_newRfqNo, 
+          @v_prNo; 
+        
+        DECLARE @v_prSeq CHAR(5); 
+        DECLARE item_cursor CURSOR FOR 
+          SELECT a.pr_seq 
+          FROM   tb_pritem a 
+          WHERE  a.pr_no = @v_prNo; 
+        
+        OPEN item_cursor 
+        
+        FETCH next FROM item_cursor INTO @v_prSeq; 
+        
+        WHILE @@FETCH_STATUS = 0 
+          BEGIN 
+              EXEC Usp_pritem_create_rfqitem 
+                @v_newRfqNo, 
+                @v_prNo, 
+                @v_prSeq; 
+        
+              FETCH next FROM item_cursor INTO @v_prSeq; 
+          END 
+        
+        CLOSE item_cursor; 
+        
+        DEALLOCATE item_cursor; 
+    
+    
+    	/*==========================================================
+    		공사(S), 용역(W)일때 tb_constrcode (서비스정보)  입력
+    	==========================================================*/
+    	DECLARE @v_constrLoc VARCHAR(80)
+    		  ,	@v_constrFrDt DATETIME
+    		  , @v_constrToDt DATETIME;
+    
+    	IF @v_prTypecd <> 'N'
+    	BEGIN
+    
+    		SELECT @v_constrLoc = constr_loc
+    			 , @v_constrFrDt = constr_fr_dt
+    			 , @v_constrToDt = constr_to_dt
+    		  FROM tb_pritem
+    		 WHERE pr_no = @v_prNo;
+    	   
+    	   UPDATE tb_constrcode SET constr_loc=@v_constrLoc, constr_fr_dt=@v_constrFrDt, constr_To_dt=@v_constrToDt Where constr_cd =  @v_constrcd; 
+    	   UPDATE tb_pritem SET item_cd=@v_constrcd Where pr_no = @v_prNo And rfq_no = @v_newRfqNo; 
+    	   UPDATE tb_rfqitem SET item_cd=@v_constrcd Where pr_no = @v_prNo And rfq_no = @v_newRfqNo; 
+    		   
+        END
+    
+        UPDATE a 
+        SET    bid_sub_typecd = #{bidSubTypecd}, 
+                bid_typecd = #{bidTypecd},
+                selected_bidder_std = #{selectedBidderStd},
+                bidder_rate = #{bidderRate},
+                bid_expire_dt = #{bidExpireDt},
+                rfqdoc_yn = #{rfqdocYn},
+                rfqdoc_expire_dt = #{rfqdocExpireDt},
+                rfqdoc_rmrk = #{rfqdocRmrk},
+                techdoc_yn = #{techdocYn},
+                techdoc_expire_dt = #{techdocExpireDt},
+                techdoc_rmrk = #{techdocRmrk}             
+        FROM   tb_rfq a 
+        WHERE  a.rfq_no = @v_newRfqNo; 
+        
+        SELECT @v_newRfqNo AS newRfqNo; 
+	]]>
+  </select>
+</mapper>

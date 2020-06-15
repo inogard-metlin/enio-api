@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.pr.PrMapper">
+  <insert id="add" parameterType="kr.co.inogard.enio.api.domain.pr.Pr">
+    <selectKey resultType="string" keyProperty="prNo" order="BEFORE">
+		<![CDATA[
+		   DECLARE
+            @v_curdt datetime,
+            @v_orgcd char(5),
+            @v_seq int,
+            @v_ymd char(8),
+            @v_prno char(20)
+
+       	SELECT @v_orgcd = #{orgCd}, @v_curdt = GETDATE()
+       	SELECT @v_ymd = CONVERT(CHAR(10), @v_curdt, 112)
+
+       	SELECT @v_seq = ISNULL(MAX(100000 + CONVERT(INT, SUBSTRING(pr_no, 16, 5))) + 1, 100001)
+       	FROM tb_pr
+       	WHERE SUBSTRING(pr_no, 1, 15) = @v_orgcd + '10' + @v_ymd
+
+       	SELECT @v_prno = @v_orgcd + '10' + @v_ymd + SUBSTRING(CONVERT(CHAR(6), @v_seq), 2, 5)
+       	
+       	SELECT @v_prno AS prNo
+    ]]>
+    </selectKey>
+    <![CDATA[
+			INSERT INTO tb_pr (
+        pr_no, 
+        ttl, 
+        pr_typecd, 
+        tax_typecd, 
+        io_flag, 
+        gm_usrcd, 
+        chrg_usrcd, 
+        gr_chrg_usrcd, 
+        chk_chrg_usrcd, 
+        req_usr_nm, 
+        req_usr_tel, 
+        pr_rmrk, 
+        dlv_loc, 
+        dlv_req_dt, 
+        spot_dscr_yn, 
+        spot_dscr_dt, 
+        spot_dscr_usrnm, 
+        spot_dscr_tel, 
+        spot_dscr_loc, 
+        org_cd, 
+        sub_org_cd, 
+        pr_st, 
+        reg_dt, 
+        send_dt,
+        chrg_deptcd,
+        reg_usrcd
+      ) VALUES (
+        #{prNo}, 
+        #{ttl}, 
+        #{prTypecd}, 
+        #{taxTypecd}, 
+        #{ioFlag}, 
+        #{gmChrgrCd}, 
+        #{prChrgrCd}, 
+        #{grChrgrCd}, 
+        #{chkChrgrCd}, 
+        #{reqUsrNm}, 
+        #{reqUsrTel}, 
+        #{prRmrk}, 
+        #{dlvLoc}, 
+        #{dlvReqYmd}, 
+        #{spotDscrYn}, 
+        #{spotDscrDt}, 
+        #{spotDscrUsrnm}, 
+        #{spotDscrUsrtel}, 
+        #{spotDscrLoc}, 
+        #{orgCd}, 
+        #{subOrgCd}, 
+        '01', 
+        Getdate(), 
+        Getdate(),
+        (SELECT i.dept_cd from tb_usercode i where i.user_cd=#{prChrgrCd}),
+        #{prChrgrCd}
+      )
+    ]]>
+  </insert>
+
+  <select id="findByPrNo" parameterType="string" resultType="kr.co.inogard.enio.api.domain.pr.Pr">
+	<![CDATA[
+		SELECT pr_no,
+		       ttl,
+		       pr_typecd,
+		       tax_typecd,
+		       io_flag,
+		       gm_usrcd AS gmChrgrCd,
+		       chrg_usrcd AS prChrgrCd,
+		       gr_chrg_usrcd AS grChrgrCd,
+		       chk_chrg_usrcd AS chkChrgrCd,
+		       req_usr_nm,
+		       req_usr_tel,
+		       pr_rmrk,
+		       dlv_loc,
+		       dlv_req_dt AS dlvReqYmd,
+		       spot_dscr_yn,
+		       spot_dscr_dt,
+		       spot_dscr_usrnm,
+		       spot_dscr_tel AS spotDscrUsrtel,
+		       spot_dscr_loc,
+               sub_org_cd            
+		FROM   tb_pr
+		WHERE pr_no = #{prNo}
+	]]>
+  </select>
+
+  <select id="findCancelResultAfterCancel" parameterType="hashmap" resultType="hashmap">
+  <![CDATA[ 
+    DECLARE @v_prNo  CHAR(20), 
+            @v_rfqNo CHAR(20); 
+    
+    SET @v_prNo = #{prNo}; 
+    SET @v_rfqNo = #{rfqNo}; 
+    
+    --입찰공고문 삭제처리 
+    DELETE FROM tb_rfqfile 
+    WHERE  rfq_no = @v_rfqNo; 
+    
+    DELETE FROM tb_rfqcus 
+    WHERE  rfq_no = @v_rfqNo; 
+    
+    DELETE FROM tb_rfqdegree 
+    WHERE  rfq_no = @v_rfqNo; 
+    
+    DELETE FROM tb_rfqservice 
+    WHERE  rfq_no = @v_rfqNo; 
+    
+    DELETE FROM tb_rfqitem 
+    WHERE  rfq_no = @v_rfqNo; 
+    
+    DELETE FROM tb_rfq 
+    WHERE  rfq_no = @v_rfqNo; 
+    
+    --구매의뢰 반송처리 
+    UPDATE a 
+    SET    pr_st = '00', 
+           return_yn = 'Y', 
+           return_rmrk = '구매취소', 
+           return_dt = Getdate() 
+    FROM   tb_pr a 
+    WHERE  a.pr_no = @v_prNo; 
+    
+    UPDATE a 
+    SET    item_st = '00', 
+           rfq_no = rfq_no 
+    FROM   tb_pritem a 
+    WHERE  a.pr_no = @v_prNo; 
+    
+    SELECT return_dt   AS returnDt, 
+           return_rmrk AS returnRmrk 
+    FROM   tb_pr a 
+    WHERE  a.pr_no = @v_prNo; 
+  ]]>
+  </select>
+</mapper>

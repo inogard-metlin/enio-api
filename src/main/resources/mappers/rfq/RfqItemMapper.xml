@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.rfq.RfqItemMapper">
+	<select id="findAllByRfqNo" parameterType="string" resultType="kr.co.inogard.enio.api.domain.rfq.RfqItem">
+	<![CDATA[
+		SELECT a.rfq_no, a.rfq_seq as item_seq, a.pr_no, a.pr_seq as pr_item_seq
+			,a.item_nm
+			,a.item_cd
+			,a.cls_cd
+			,a.size_nm
+			,a.model_nm
+			,a.mk_comp_nm
+			,a.dlv_loc
+			,a.dlv_req_dt as dlv_req_ymd
+			,RTRIM(a.unit_cd) AS unit_cd
+			,a.plan_unit_prc
+			,a.qty
+		FROM tb_rfqitem a with (nolock)
+		WHERE a.rfq_no = #{rfqNo}
+	]]>
+	</select>
+
+
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.quot.QuotSrvMapper">
+	
+	<select id="findAllByQuotItem" parameterType="quotItem" resultType="quotSrv">
+	<![CDATA[
+		SELECT 
+			rfq_no, 
+			quot_rev, 
+			cus_cd,
+			quot_seq as item_seq,
+			quot_srv_seq as srv_seq,
+			rfq_seq as rfq_item_seq,
+			rfq_srv_seq as rfq_srv_seq,
+			qty,
+			unit_prc,
+			amt
+		FROM tb_quotservice a with (nolock)
+		WHERE rfq_no = #{rfqNo}
+			AND cus_cd = #{cusCd}
+			AND quot_rev = #{quotRev}
+			AND quot_seq = #{itemSeq}
+	]]>
+	</select>
+
+
+</mapper>

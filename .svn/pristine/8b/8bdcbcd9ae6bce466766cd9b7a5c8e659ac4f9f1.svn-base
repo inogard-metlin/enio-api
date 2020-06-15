@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.rfq.RfqDegreeMapper">
+	<select id="findAllByRfqNo" parameterType="string" resultType="rfqDegree">
+	<![CDATA[
+		SELECT  rfq_no,
+				quot_rev,
+				bid_start_dt,
+				bid_expire_dt,
+				bid_open_dt,
+				rebid_rslt_rmrk as rebid_rmrk
+		FROM   tb_rfqdegree a with (nolock)
+		WHERE rfq_no = #{rfqNo}
+	]]>
+	</select>
+
+
+</mapper>

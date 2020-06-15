@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.po.PoMapper">
+	<select id="findByPoNo" resultType="kr.co.inogard.enio.api.domain.po.Po">
+		<![CDATA[
+		SELECT a.po_no,a.ttl
+			,a.po_dt as po_ymd
+			,a.po_amt,a.vat_amt
+			,a.pr_typecd,a.tax_typecd,a.io_flag
+			,a.chrg_usrcd,a.chrg_deptcd
+			,a.org_bsn_no
+			,a.org_nm
+			,a.org_ceo_nm
+			,a.org_main_tel
+			,a.org_main_fax
+			,a.org_main_email
+			,a.org_uptae_nm
+			,a.org_upjong_nm
+			,a.org_zip_cd
+			,a.org_addr
+			,a.cus_cd
+			,a.cus_bsn_no
+			,a.cus_nm
+			,a.cus_ceo_nm
+			,a.cus_main_tel
+			,a.cus_main_fax
+			,a.cus_main_email
+			,a.cus_uptae_nm
+			,a.cus_upjong_nm
+			,a.cus_zip_cd
+			,a.cus_addr
+			,a.crcy_cd
+			,a.crcy_rate
+			,a.cont_fr_dt as dlv_fr_ymd
+			,a.cont_to_dt as dlv_to_ymd
+			,a.dlv_loc,a.dlv_req_dt as dlv_req_ymd
+			,a.prepay_insr_yn,a.prepay_amt
+			,a.prfm_insr_yn,a.prfm_insr_rate,a.prfm_insr_amt
+			,a.flaw_insr_yn,a.flaw_insr_rate,a.flaw_insr_year
+			,a.delay_rate_yn,a.delay_rate,a.delay_max_rate
+			,a.dlv_cond_rmrk
+			,a.pay_cond_rmrk
+			,a.po_doc_kind
+			,a.offline_yn
+			,a.po_rmrk
+			,a.reg_dt
+			,a.po_st
+            ,a.rfq_no
+            ,a.sub_org_cd
+		FROM tb_po a with(nolock)
+		WHERE a.po_no = #{poNo}
+		]]>
+	</select>
+</mapper>

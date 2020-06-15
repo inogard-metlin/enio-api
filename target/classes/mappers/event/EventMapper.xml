@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.event.EventMapper">
+  <sql id="sqlSelect">
+    SELECT  evt.evt_no,
+            evt.evt_io_type,
+            evt.evt_cmd_param,
+            evt.evt_st,
+            evt.reg_dt,
+            evt.req_cntn,
+            evt.rslt_cd,
+            evt.rslt_msg,
+            evt.rcv_cntn,
+            evt.rcv_dt,
+            evt.agt_cd,
+            evt.sche_kind
+    FROM api_event evt
+  </sql>
+
+  <select id="findByEvtNo" parameterType="string" resultType="kr.co.inogard.enio.api.domain.event.CmmEvent">
+    <include refid="sqlSelect"/>
+    <![CDATA[
+      WHERE  evt.evt_no = #{value} 
+    ]]>
+  </select>
+
+  <select id="findAll" resultType="kr.co.inogard.enio.api.domain.event.CmmEvent">
+  <![CDATA[
+    SELECT A.*
+    FROM (
+  ]]>
+    SELECT
+      COUNT(*) OVER () filtered_count,
+      ROW_NUMBER() OVER (
+      <choose>
+        <when test="pageable != null and pageable.sort != null">
+          <foreach item="order" collection="pageable.sort" open="ORDER BY " separator=",">
+            ${order.property} ${order.direction}
+          </foreach>
+        </when>
+        <otherwise>
+          ORDER BY reg_dt desc
+        </otherwise>
+      </choose>
+      ) AS RNUM,
+      evt.evt_no,
+      evt.evt_io_type,
+      evt.evt_cmd_param,
+      evt.evt_st,
+      evt.reg_dt,
+      evt.rslt_cd,
+      evt.rslt_msg,
+      evt.rcv_dt,
+      evt.agt_cd,
+      evt.sche_kind
+      FROM api_event evt
+    <where>
+      <if test="search != null">
+        <if test="search.value != null and search.value != ''">
+        <![CDATA[
+          evt.evt_cmd_param like '%' + #{search.value} + '%'
+        ]]>
+        </if>
+        <if test="search.evtIoType != null and search.evtIoType != ''">
+        <![CDATA[
+          AND evt.evt_io_type = #{search.evtIoType}
+        ]]>
+        </if>
+        <if test="search.evtSt != null and search.evtSt != ''">
+        <![CDATA[
+          AND evt.evt_st = #{search.evtSt}
+        ]]>
+        </if>
+        <if test="search.agtCd != null and search.agtCd != ''">
+        <![CDATA[
+          AND evt.agt_cd = #{search.agtCd}
+        ]]>
+        </if>
+      </if>
+    </where>
+    ) A
+    <where>
+      <if test="pageable != null">
+      <![CDATA[
+        A.RNUM > (#{pageable.page} * #{pageable.size})
+      ]]>
+      </if>
+      <if test="pageable != null">
+      <![CDATA[
+        AND A.RNUM <= ((#{pageable.page} + 1) * #{pageable.size})
+      ]]>
+      </if>
+    </where>
+  </select>
+
+  <select id="count" resultType="long">
+  <![CDATA[
+    SELECT count(*)
+    FROM api_event
+  ]]>
+  </select>
+
+  <insert id="add" parameterType="kr.co.inogard.enio.api.domain.event.CmmEvent">
+    <selectKey resultType="kr.co.inogard.enio.api.domain.event.CmmEvent" keyProperty="evtNo" order="BEFORE">
+    <![CDATA[
+      DECLARE @v_curdt DATETIME, 
+              @v_orgcd CHAR(5), 
+              @v_seq   INT, 
+              @v_ymd   CHAR(8), 
+              @v_evtno CHAR(20) 
+      
+      SELECT @v_orgcd = #{agtCd}, 
+             @v_curdt = Getdate() 
+      
+      SELECT @v_ymd = CONVERT(CHAR(8), @v_curdt, 112) 
+      
+      SELECT @v_seq = Isnull(Max(10000000 + CONVERT(INT, Substring(evt_no, 14, 7))) + 1, 10000001) 
+      FROM   api_event 
+      WHERE  Substring(evt_no, 1, 13) = @v_orgcd + @v_ymd 
+      
+      SELECT @v_evtno = @v_orgcd + @v_ymd + Substring(CONVERT(CHAR(8), @v_seq), 2, 7) 
+      
+      SELECT @v_evtno AS evtNo 
+    ]]>
+    </selectKey>
+    <![CDATA[
+      INSERT INTO api_event (
+        evt_no, 
+        evt_io_type, 
+        evt_cmd_param, 
+        evt_st, 
+        reg_dt, 
+        req_cntn, 
+        rslt_cd, 
+        rslt_msg, 
+        rcv_cntn, 
+        rcv_dt, 
+        agt_cd, 
+        sche_kind
+      ) VALUES (
+        #{evtNo}, 
+        #{evtIoType}, 
+        #{evtCmdParam}, 
+        #{evtSt}, 
+        getdate(), 
+        #{reqCntn}, 
+        #{rsltCd}, 
+        #{rsltMsg}, 
+        #{rcvCntn}, 
+        NULL, 
+        #{agtCd}, 
+        #{scheKind} 
+      )
+    ]]>
+  </insert>
+
+  <update id="updateReq" parameterType="kr.co.inogard.enio.api.domain.event.CmmEvent">
+    <![CDATA[
+      UPDATE api_event 
+      SET    reg_dt = getdate(), 
+             req_cntn = #{reqCntn} 
+      WHERE  evt_no = #{evtNo} 
+    ]]>
+  </update>
+
+  <update id="updateRes" parameterType="kr.co.inogard.enio.api.domain.event.CmmEvent">
+    <![CDATA[
+      UPDATE api_event 
+      SET    rslt_cd = #{rsltCd}, 
+             rslt_msg = #{rsltMsg}, 
+             rcv_cntn = #{rcvCntn}, 
+             rcv_dt = getdate(),
+             evt_st = #{evtSt}
+      WHERE  evt_no = #{evtNo} 
+    ]]>
+  </update>
+</mapper>

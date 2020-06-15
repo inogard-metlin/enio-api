@@ -1,0 +1,49 @@
+server:
+  port: 17070
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+
+  profiles:
+    active: local 
+
+mybatis:
+  typeAliasesPackage: kr.co.inogard.enio.api.domain
+  mapperLocations: classpath*:**/mappers/**/*.xml
+  configuration:
+    lazyLoadingEnabled: true
+    mapUnderscoreToCamelCase: true
+    jdbcTypeForNull: varchar
+    
+endpoints:
+  jmx:
+    domain: enio-api
+    unique-names: true
+    
+enio:
+  welcome:
+    message: Welcome Enio API!
+  api:
+    code: E0000
+    licence-key: RU5JT0UwMDAwLTIwMTcwOA==
+  agent:
+    version: v1
+    context-path: /agent
+    uri-path:
+      pr: /pr
+      cus: /cus
+      bid:
+        rfq: /bid/rfq
+        quot: /bid/quot
+        notify-on-channel: /bid/notify-on-channel
+      po: /po
+  
+multipart:
+  max-file-size: 30MB
+  max-request-size: 300MB

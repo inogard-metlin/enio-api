@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.user.UserMapper">
+	<select id="findByUserCd" parameterType="string" resultType="kr.co.inogard.enio.api.domain.user.User">
+	    <![CDATA[
+	    SELECT	a.user_cd,
+				a.user_nm,
+				a.user_email,
+				a.user_tel,
+				a.user_sms,
+				a.org_cd,
+				a.cus_cd,
+				a.dept_cd 
+		FROM		tb_usercode a WITH (NOLOCK)
+		WHERE	a.user_cd = #{userCd}
+	    ]]>
+    </select>
+
+	<insert id="add" parameterType="kr.co.inogard.enio.api.domain.user.User">
+		<selectKey resultType="hashmap" keyProperty="userCd,cusCd" order="BEFORE">
+        <![CDATA[
+DECLARE 	@v_prefix char(5), 
+	@v_curdt datetime,
+	@v_seq char(5),
+	@v_newusercd char(10),
+	@v_cuscd char(10)
+	 
+ SELECT @v_prefix=a.org_cd,@v_cuscd=a.cus_cd,@v_curdt=getdate() from tb_purorg a with(nolock) where a.org_cd=#{orgCd}
+
+ SELECT  @v_seq=ISNULL(MAX(SUBSTRING(user_cd,6,5)),'00000') FROM TB_USERCODE with (nolock)	
+	WHERE substring(user_cd,1,5)=@v_prefix
+
+ SELECT @v_seq=dbo.fn_toHex32(dbo.fn_parseHex32(@v_seq)+1,5)
+ SELECT @v_newusercd= @v_prefix+@v_seq
+ SELECT @v_newusercd as userCd,@v_cuscd as cusCd
+
+        ]]>
+		</selectKey>
+		<![CDATA[
+INSERT INTO TB_USERCODE(
+	user_cd, login_id, login_pwd, user_nm,
+	user_ssn, user_tel,user_sms, user_email,
+	user_fax, user_typecd, admin_flag, access_flag,
+	last_dt, reg_dt, aprvl_dt, use_yn,
+	dept_cd, grade_cd, cus_cd, org_cd,
+	user_st, dept_rmrk, sms_rcv_yn, email_rcv_yn )
+VALUES(#{userCd}, #{userCd}+#{userCd} /*login_id*/,
+	NULL /*login_pwd*/, #{userNm},
+	NULL /*user_ssn*/, #{userTel},
+	#{userSms}, #{userEmail},
+	NULL /*user_fax*/ ,'UT210' /*user_typecd*/,
+	'N' /*admin_flag*/, 'Y' /*access_flag*/,
+	NULL /*last_dt*/, getdate() /*reg_dt*/,
+	getdate() /*aprvl_dt*/, 'Y' /*use_yn*/,
+	#{deptCd}, NULL /*grade_cd*/,
+	#{cusCd} /*cus_cd*/, #{orgCd},
+	'01'/*user_st*/, NULL /*dept_rmrk*/,
+	'N' /*sms_rcv_yn*/, 'N' /*email_rcv_yn*/ )
+        ]]>
+    </insert>
+</mapper>
+	

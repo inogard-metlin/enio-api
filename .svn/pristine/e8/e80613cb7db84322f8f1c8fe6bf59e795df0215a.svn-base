@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.pr.PrItemMapper">
+	<insert id="add" parameterType="PrItem">
+   	<![CDATA[
+		INSERT INTO tb_pritem (
+			pr_no, pr_seq, item_cd, item_nm, cls_cd,
+			size_nm, model_nm, unit_cd, qty, plan_unit_prc,
+			mk_comp_nm, item_st, dlv_loc, dlv_req_dt
+        ) VALUES (
+            #{prNo}, #{itemSeq}, #{itemCd}, #{itemNm}, #{clsCd},
+            #{sizeNm}, #{modelNm}, #{unitCd}, #{qty}, #{planUnitPrc},
+            #{mkCompNm},'02', #{dlvLoc}, #{dlvReqYmd}
+		)
+	]]>
+	</insert>
+    <select id="findAllByPrNo" resultType="PrItem">
+    <![CDATA[
+	select a.pr_no,a.pr_seq as item_seq,a.item_nm
+	,a.item_cd
+	,a.cls_cd,a.size_nm,a.model_nm
+	,a.unit_cd,a.qty,a.plan_unit_prc,a.rfq_no,a.mk_comp_nm
+	,a.item_st,a.dlv_loc,a.dlv_req_dt as dlv_req_ymd
+	from tb_pritem a with(nolock)
+	where a.pr_no=#{prNo}
+	]]>
+    </select>
+	
+	
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.inogard.enio.api.mappers.rfq.RfqCusMapper">
+	<select id="findAllByRfqNo" parameterType="string" resultType="rfqCus">
+	<![CDATA[
+			SELECT 
+				rfq_no, cus_cd, quot_rev,
+				result_yn as rslt_yn, po_dt as po_ymd
+			FROM   tb_rfqcus a with (nolock)
+			WHERE rfq_no = #{rfqNo}
+	]]>
+	</select>
+
+
+</mapper>

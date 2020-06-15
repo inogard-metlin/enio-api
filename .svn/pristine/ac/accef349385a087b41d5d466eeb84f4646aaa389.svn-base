@@ -1,0 +1,10 @@
+package kr.co.inogard.enio.api.domain.po;
+
+import lombok.Data;
+
+@Data
+public class PoFile {
+	private String poNo;
+	private String fileSeq;
+	private String fileNo;
+}

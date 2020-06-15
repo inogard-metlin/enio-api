@@ -1,0 +1,40 @@
+package kr.co.inogard.enio.api.security;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.codec.Base64;
+import org.springframework.stereotype.Service;
+import kr.co.inogard.enio.api.domain.agent.Agent;
+import kr.co.inogard.enio.api.mappers.agent.AgentMapper;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@Slf4j
+public class ApiUserDetailsServiceImpl implements UserDetailsService {
+
+  @Autowired
+  private AgentMapper agentMapper;
+
+  @Override
+  public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+    Agent agt = agentMapper.findAgentByAgtCd(userName);
+
+    if (agt == null) {
+      throw new UsernameNotFoundException(userName);
+    }
+
+    String passwd = null;
+    try {
+      String base64EncodedLicenceKey = agt.getLicenceKey();
+      passwd = new String(Base64.decode(base64EncodedLicenceKey.getBytes()), "UTF-8");
+      log.info("Decode Licence Key : {}", passwd);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new UsernameNotFoundException("Invalid Licence Key");
+    }
+
+    return new ApiUserDetailsImpl(agt, passwd);
+  }
+}

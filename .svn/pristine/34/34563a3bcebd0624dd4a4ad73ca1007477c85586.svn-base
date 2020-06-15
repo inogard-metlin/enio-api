@@ -1,0 +1,27 @@
+package kr.co.inogard.enio.api.web;
+
+import java.util.HashMap;
+import java.util.Map;
+import javax.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import kr.co.inogard.enio.api.domain.item.ItemDto;
+
+@RestController
+@RequestMapping("/api/test")
+public class HomeRestController {
+
+  @RequestMapping(method = RequestMethod.GET)
+  @ResponseStatus(HttpStatus.CREATED)
+  public Map<String, Object> create(@RequestBody @Valid ItemDto.CreateWrapper create) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    map.put("test", "안녕");
+
+    return map;
+  }
+  
+}
