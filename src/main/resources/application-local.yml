@@ -4,6 +4,8 @@ spring:
     url: jdbc:log4jdbc:jtds:sqlserver://192.168.0.218:1433/ebiz4u
     username: ebiz4u
     password: ghkfWkr
+    test-on-borrow: true
+    validation-query: SELECT 1
     
 logging:
   path: e:/enio/enio-api/logs/
