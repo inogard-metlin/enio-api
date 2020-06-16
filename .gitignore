@@ -7,6 +7,7 @@
 # *.zip
 .classpath
 .project
+.factorypath
 
 ## 폴더 무시 - 기억하자   
 .svn/
