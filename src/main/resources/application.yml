@@ -15,7 +15,7 @@ spring:
 
 mybatis:
   typeAliasesPackage: kr.co.inogard.enio.api.domain
-  mapperLocations: classpath*:**/mappers/**/*.xml
+  mapperLocations: classpath:/mappers/**/*.xml
   configuration:
     lazyLoadingEnabled: true
     mapUnderscoreToCamelCase: true
