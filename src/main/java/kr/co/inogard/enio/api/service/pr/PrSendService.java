@@ -123,6 +123,7 @@ public class PrSendService {
 		log.info("sendUrl : {}", url);
 		PrDto.Response res = restTemplate.postForObject(url, requestEntity, PrDto.Response.class);
 		if (RsltCd.SUC0000.name().equals(res.getRsltCd())) {
+			prMapMapper.delPrMap(prNo);
 			prMapMapper.add(prMap);
 		}
 		log.info("rsltCd : {}", res.getRsltCd());

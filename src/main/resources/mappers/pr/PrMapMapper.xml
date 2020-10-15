@@ -43,6 +43,10 @@
     AND a.pr_seq = '00001' 
 	]]>
 	</select>
-  
-  
+
+	<delete id="delPrMap" parameterType="string">
+          <![CDATA[
+              DELETE api_prmap Where e4u_pr_no = #{prNo}
+          ]]>
+    </delete>
 </mapper>

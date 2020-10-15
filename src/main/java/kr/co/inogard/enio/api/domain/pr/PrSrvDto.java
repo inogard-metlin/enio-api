@@ -23,7 +23,12 @@ public class PrSrvDto {
 		@Size(min = 5)
 		@MaxByteLength(5)
 		private String itemSeq;
-		
+
+		@NotBlank
+		@Size(min = 5)
+		@MaxByteLength(5)
+		private String srvSeq;
+
 		@NotBlank
 		@MaxByteLength(150)
 		private String srvNm;

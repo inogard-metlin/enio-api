@@ -14,7 +14,7 @@
 			,a.dlv_loc
 			,a.dlv_req_dt as dlv_req_ymd
 			,RTRIM(a.unit_cd) AS unit_cd
-			,a.plan_unit_prc
+			,ISNULL(a.plan_unit_prc, 0) AS plan_unit_prc
 			,a.qty
 		FROM tb_rfqitem a with (nolock)
 		WHERE a.rfq_no = #{rfqNo}

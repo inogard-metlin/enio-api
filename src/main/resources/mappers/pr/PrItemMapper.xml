@@ -30,7 +30,7 @@
            , a.model_nm
 	       , RTRIM(a.unit_cd) as unit_cd
            , a.qty
-           , a.plan_unit_prc
+           , ISNULL(a.plan_unit_prc, 0) AS plan_unit_prc
            , a.rfq_no
            , a.mk_comp_nm
 	       , a.item_st
