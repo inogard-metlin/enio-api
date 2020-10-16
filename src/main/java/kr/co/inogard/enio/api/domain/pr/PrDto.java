@@ -52,7 +52,7 @@ public class PrDto {
 		@MaxByteLength(120)
 		private String dlvLoc;
 
-		@NotNull
+		//@NotNull
 		@DateTimeFormat(pattern = "yyyyMMdd")
 		private Date dlvReqYmd;
 
